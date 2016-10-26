@@ -212,7 +212,7 @@ void Analysis (const Data *d, Grid *grid)
   #endif
   if (g_stepNumber==0) {
     hist_file = fopen ("pluto_hst.out", "w");
-    fprintf(hist_file,"#time g_dt mass TE KE1 KE2 KE3 MOM1 MOM2 MOM3 mdot\n ");
+    fprintf(hist_file,"#time g_dt mass TE KE1 KE2 KE3 MOM1 MOM2 MOM3 mdot mdot_x mdot_c madd eadd mdot_jet\n ");
   }
   else hist_file = fopen ("pluto_hst.out", "a");
 

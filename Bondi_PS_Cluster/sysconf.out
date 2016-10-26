@@ -1,0 +1,12 @@
+USER           = prateek
+WORKING_DIR    = /home/prateek/Desktop/Public_Codes/Galaxy-Cluster-PLUTO/Bondi_PS_Cluster
+SYSTEM_NAME    = Linux
+NODE_NAME      = prateek-desktop
+RELEASE        = 3.13.0-91-generic
+ARCH           = x86_64
+BYTE_ORDER     = little
+VERSION        = #138-Ubuntu SMP Fri Jun 24 17:00:34 UTC 2016
+PLUTO_DIR      = /home/prateek/Desktop/Public_Codes/Galaxy-Cluster-PLUTO
+PLUTO_VERSION  = "4.1"
+C_COMPILER     = gcc
+MPI_C_COMPILER = mpicc
