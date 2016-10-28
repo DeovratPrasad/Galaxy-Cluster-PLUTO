@@ -2,7 +2,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 import os, sys
-sys.path.append("/home/prateek/Desktop/Public_Codes/Galaxy-Cluster-PLUTO/Tools/pyPLUTO/pyPLUTO")
+sys.path.append(os.environ['PLUTO_DIR']+"/Tools/pyPLUTO/pyPLUTO") #access linux environment variable
 import pyPLUTO as pp
 
 # script to make 2-D snapshots of various quantities
