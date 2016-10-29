@@ -132,6 +132,8 @@ void ICM_init(Data *d, Grid *grid)
     d->Vc[RHO][0][0][i] /= UNIT_DENSITY; 
     d->Vc[PRS][0][0][i] /= (UNIT_DENSITY*UNIT_VELOCITY*UNIT_VELOCITY);
    }
+   g_d_outer = d->Vc[RHO][0][0][IEND];
+   g_p_outer = d->Vc[PRS][0][0][IEND];
    TOT_LOOP(k,j,i){
     d->Vc[RHO][k][j][i] = d->Vc[RHO][0][0][i];
     d->Vc[PRS][k][j][i] = d->Vc[PRS][0][0][i];
@@ -325,7 +327,6 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
 {
   int   i, j, k, nv;
   double  *x1, *x2, *x3, *dx1, *dx2, *dx3;
-  double d_outer, p_outer, Kent_out, const2;
   double DM_POT[NX1_TOT];
   x1 = grid[IDIR].x;
   x2 = grid[JDIR].x;
@@ -334,23 +335,17 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   dx2 = grid[JDIR].dx;
   dx3 = grid[KDIR].dx;
  
-   const2 = CONST_mu*CONST_mp*pow((CONST_mue*CONST_mp),(g_gamma-1.0))/(CONST_kB*1.16e7); 
-   Kent_out = KentX( 5.0*UNIT_LENGTH );  
-   d_outer = g_inputParam[ne_out]*CONST_mp*CONST_mue; //cgs units
-   p_outer = Kent_out*pow(d_outer,g_gamma)/const2/(UNIT_DENSITY*UNIT_VELOCITY*UNIT_VELOCITY); //code unit
-   d_outer /= UNIT_DENSITY; //code unit
-
    ITOT_LOOP(i){
    DM_POT[i] = BodyForcePotential(x1[i], 0.0, 0.0); 
    }
-  if (side == 0) {    /* -- check solution inside domain -- */
+   if (side == 0) {    /* -- check solution inside domain -- */
     #ifdef PARALLEL
     if (grid[0].rank_coord == grid[0].nproc - 1){
     #endif
     KTOT_LOOP(k){
     JTOT_LOOP(j){
-    d->Vc[RHO][k][j][IEND] = d_outer;
-    d->Vc[PRS][k][j][IEND] = p_outer;
+    d->Vc[RHO][k][j][IEND] = g_d_outer;
+    d->Vc[PRS][k][j][IEND] = g_p_outer;
     }}
     #ifdef PARALLEL
     }
@@ -369,8 +364,6 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
     #ifdef PARALLEL
     }
     #endif
-
-
   }
 
   if (side == X1_BEG){  /* -- X1_BEG boundary -- */
