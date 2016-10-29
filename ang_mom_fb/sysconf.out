@@ -1,0 +1,12 @@
+USER           = prateek
+WORKING_DIR    = /Users/prateek/Desktop/codes/Galaxy-Cluster-PLUTO/ang_mom_fb
+SYSTEM_NAME    = Darwin
+NODE_NAME      = Prateeks-MacBook-Air.local
+RELEASE        = 14.5.0
+ARCH           = x86_64
+BYTE_ORDER     = little
+VERSION        = Darwin Kernel Version 14.5.0: Mon Aug 29 21:14:16 PDT 2016; root:xnu-2782.50.6~1/RELEASE_X86_64
+PLUTO_DIR      = /Users/prateek/Desktop/codes/Galaxy-Cluster-PLUTO/
+PLUTO_VERSION  = "4.1"
+C_COMPILER     = gcc
+MPI_C_COMPILER = mpicc
