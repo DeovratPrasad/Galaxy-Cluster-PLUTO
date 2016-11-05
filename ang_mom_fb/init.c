@@ -154,7 +154,7 @@ void ICM_init(Data *d, Grid *grid)
  double delrho[NX3_TOT][NX2_TOT][NX1_TOT];
 
  memset(delrho, 0, sizeof delrho);
- for(n = 4; n<=20; n++){
+/* for(n = 4; n<=20; n++){
  for(n1 = -n; n1<=n; n1+=2*n){
     kx = 2.0*CONST_PI*n1/(2.*g_domEnd[IDIR]);
     for(l = 4; l<=20; l++){
@@ -177,7 +177,7 @@ void ICM_init(Data *d, Grid *grid)
           }
        }} 
     }} 
- }}
+ }}*/ 
  TOT_LOOP(k,j,i){
    d->Vc[RHO][k][j][i] += delrho[k][j][i];
    d->Vc[TRC][k][j][i] = 0.0;

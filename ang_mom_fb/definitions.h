@@ -1,12 +1,12 @@
 #define  PHYSICS                 HD
-#define  DIMENSIONS              2
-#define  COMPONENTS              3
+#define  DIMENSIONS              1
+#define  COMPONENTS              1
 #define  GEOMETRY                SPHERICAL
 #define  BODY_FORCE              POTENTIAL
 #define  COOLING                 TABULATED
 #define  INTERPOLATION           LINEAR
 #define  TIME_STEPPING           RK2
-#define  DIMENSIONAL_SPLITTING   NO
+#define  DIMENSIONAL_SPLITTING   YES
 #define  NTRACER                 1
 #define  USER_DEF_PARAMETERS     16
 #define  USER_DEF_CONSTANTS      3
