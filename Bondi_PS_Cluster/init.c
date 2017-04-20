@@ -209,8 +209,9 @@ void Analysis (const Data *d, Grid *grid)
   int k, j, i;
   double g_mass, g_TE, g_mdot,mdot_x, mdot_c, darea; 
   double g_KE1, g_KE2, g_KE3, g_mom1, g_mom2, g_mom3;
+  double g_mcold, g_mhot;
   double *dx1, *dx2, *dx3, *x1, *x2, *x3, d3;
-  double sendarray[14], recvarray[14], dvol, TkeV;
+  double sendarray[17], recvarray[17], dvol, TkeV;
   FILE *hist_file;
 
   x1 = grid[IDIR].x; x2 = grid[JDIR].x; x3 = grid[KDIR].x;
@@ -220,16 +221,18 @@ void Analysis (const Data *d, Grid *grid)
   #endif
   if (g_stepNumber==0) {
     hist_file = fopen ("pluto_hst.out", "w");
-    fprintf(hist_file,"#time g_dt mass TE KE1 KE2 KE3 MOM1 MOM2 MOM3 mdot mdot_x mdot_c madd eadd mdot_jet msub\n ");
+    fprintf(hist_file,"#[1]time [2]g_dt [3]mass [4]TE [5]KE1 [6]KE2 [7]KE3 [8]MOM1 [9]MOM2 [10]MOM3 [11]mdot [12]mdot_x [13]mdot_c [14]madd [15]eadd [16]mdot_jet [17]msub [18]mcold [19]mhot\n ");
   }
   else hist_file = fopen ("pluto_hst.out", "a");
 
   g_mass=0.0; g_TE=0.0; g_KE1=0.0; g_KE2=0.0; g_KE3=0.0;
   g_mom1=0.0; g_mom2=0.0; g_mom3=0.0;
-  g_mdot=0.0; mdot_x = 0.0; mdot_c = 0.0;
+  g_mdot=0.0; mdot_x = 0.0; mdot_c = 0.0; g_mcold = 0.0; g_mhot=0.0;
 
   DOM_LOOP(k,j,i){
-        dvol = x1[i]*x1[i]*sin(x2[j])*dx1[i]*dx2[j]*dx3[k];
+        EXPAND ( dvol = 4.*CONST_PI*x1[i]*x1[i]*dx1[i];,
+	         dvol = 2.*CONST_PI*x1[i]*x1[i]*sin(x2[j])*dx1[i]*dx2[j];,
+                 dvol = x1[i]*x1[i]*sin(x2[j])*dx1[i]*dx2[j]*dx3[k];)
         g_mass += d->Vc[RHO][k][j][i]*dvol;
         g_TE += d->Vc[PRS][k][j][i]*dvol/(g_gamma-1.0);
         EXPAND( g_KE1 += 0.5*d->Vc[RHO][k][j][i]*d->Vc[VX1][k][j][i]*d->Vc[VX1][k][j][i]*dvol;  ,
@@ -238,6 +241,13 @@ void Analysis (const Data *d, Grid *grid)
         EXPAND( g_mom1 += d->Vc[RHO][k][j][i]*d->Vc[VX1][k][j][i]*dvol;  ,
                 g_mom2 += d->Vc[RHO][k][j][i]*d->Vc[VX2][k][j][i]*dvol;  ,
                 g_mom3 += d->Vc[RHO][k][j][i]*d->Vc[VX3][k][j][i]*dvol; )
+        TkeV = (d->Vc[PRS][k][j][IBEG]*CONST_mu*CONST_mp*UNIT_VELOCITY*UNIT_VELOCITY)/(d->Vc[RHO][k][j][IBEG]*CONST_kB*1.16e9);
+        if (TkeV >= 0.5 && TkeV <=8.0){
+          g_mhot += d->Vc[RHO][k][j][i]*dvol;
+        
+	} else if (TkeV < 0.5){
+           g_mcold += d->Vc[RHO][k][j][i]*dvol;
+        }
   }
   #ifdef PARALLEL
   if (grid[0].rank_coord == 0 ){
@@ -248,7 +258,7 @@ void Analysis (const Data *d, Grid *grid)
           darea = 2.0*CONST_PI*x1[IBEG]*x1[IBEG]*sin(x2[j])*dx2[j];,
           darea = x1[IBEG]*x1[IBEG]*sin(x2[j])*dx2[j]*dx3[k];)
 
-  TkeV = (d->Vc[PRS][k][j][IBEG]*CONST_mu*CONST_mp)/(d->Vc[RHO][k][j][IBEG]*CONST_kB*1.16e9);
+  TkeV = (d->Vc[PRS][k][j][IBEG]*CONST_mu*CONST_mp*UNIT_VELOCITY*UNIT_VELOCITY)/(d->Vc[RHO][k][j][IBEG]*CONST_kB*1.16e9);
 
   g_mdot += d->Vc[RHO][k][j][IBEG]*d->Vc[VX1][k][j][IBEG]*darea;
   if(TkeV >= 0.5 && TkeV <=8.0){
@@ -266,16 +276,16 @@ void Analysis (const Data *d, Grid *grid)
    sendarray[4]=g_KE3; sendarray[5]=g_mom1; sendarray[6]=g_mom2; sendarray[7]=g_mom3; 
    sendarray[8]=g_mdot; sendarray[9] = mdot_x; sendarray[10] = mdot_c;
    sendarray[11] = madd; sendarray[12] = eadd; sendarray[13] = mdot_jet; 
-   sendarray[14] = msub;  
-   MPI_Reduce (sendarray, recvarray, 15, MPI_DOUBLE, MPI_SUM, 0,MPI_COMM_WORLD);
+   sendarray[14] = msub; sendarray[15] = g_mcold; sendarray[16] = g_mhot; 
+   MPI_Reduce (sendarray, recvarray, 17, MPI_DOUBLE, MPI_SUM, 0,MPI_COMM_WORLD);
    if (prank == 0){
      g_mass=recvarray[0]; g_TE=recvarray[1]; g_KE1=recvarray[2]; g_KE2=recvarray[3];
      g_KE3=recvarray[4]; g_mom1=recvarray[5]; g_mom2=recvarray[6]; g_mom3=recvarray[7]; 
      g_mdot=recvarray[8]; mdot_x = recvarray[9]; mdot_c = recvarray[10];
      madd = recvarray[11]; eadd = recvarray[12]; mdot_jet = recvarray[13];
-     msub = recvarray[14];
+     msub = recvarray[14]; g_mcold = recvarray[15]; g_mhot = recvarray[16];
   #endif
-    fprintf(hist_file,"%20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e\n ", g_time, g_dt, g_mass, g_TE, g_KE1, g_KE2, g_KE3, g_mom1, g_mom2, g_mom3, g_mdot, mdot_x, mdot_c, madd, eadd, mdot_jet, msub);
+    fprintf(hist_file,"%20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e\n ", g_time, g_dt, g_mass, g_TE, g_KE1, g_KE2, g_KE3, g_mom1, g_mom2, g_mom3, g_mdot, mdot_x, mdot_c, madd, eadd, mdot_jet, msub, g_mcold, g_mhot);
 
     fclose(hist_file);
   #ifdef PARALLEL
