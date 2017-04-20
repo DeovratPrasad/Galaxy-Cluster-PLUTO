@@ -104,8 +104,8 @@ double g_maxCoolingRate = 0.1;  /**< The maximum fractional variation due to
 double g_minCoolingTemp = 1.e4; /**< The minimum temperature (in K) below which
                                      cooling is suppressed. */
                                     
-double g_smallDensity  = 3.e-5; /**< Small value for density fix. */
-double g_smallPressure = 3.e-5; /**< Small value for pressure fix. */
+//double g_smallDensity  = 3.e-5; /**< Small value for density fix. */
+//double g_smallPressure = 3.e-5; /**< Small value for pressure fix. */
 #if EOS == IDEAL 
  double g_gamma = 5./3.;
 #elif EOS == ISOTHERMAL
