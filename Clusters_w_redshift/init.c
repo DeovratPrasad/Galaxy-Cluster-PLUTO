@@ -63,9 +63,15 @@ void ICM_init(Data *d, Grid *grid)
      double *x1, *x2, *x3;
      double KENT[NX1_TOT], DM_POT[NX1_TOT];
      double const1, pg, fn, fnp, err, den, pout_r, pout_s;
+     double Ez, M200_z;
 
 //     print("%d %d %d %d\n", IBEG, IEND, NX1_TOT, prank);
-     madd = 0.0; eadd =0.0; msub = 0.0;
+     madd = 0.0; eadd =0.0; msub = 0.0; 
+     g_zred = g_inputParam[zbeg]; //start at z=zbeg
+     Ez = Hubatz(g_zred)/CONST_H0;
+     M200_z = MhaloMcb(g_inputParam[M200],g_zred);
+     g_tcosmic = Redtotcosmic(g_zred)/(UNIT_LENGTH/UNIT_VELOCITY); //convert to code units
+     //print("%20.10e\n\n",g_tcosmic);
 #ifdef PARALLEL     
      MPI_Comm cart_comm;
      MPI_Request req[mreq];
@@ -82,14 +88,16 @@ void ICM_init(Data *d, Grid *grid)
      x1 = grid[IDIR].x; x2 = grid[JDIR].x; x3 = grid[KDIR].x;
      ITOT_LOOP(i){
       DM_POT[i] = UNIT_VELOCITY*UNIT_VELOCITY*BodyForcePotential(x1[i], 0.0, 0.0); //convert to cgs
-      KENT[i] = KentX( x1[i]*UNIT_LENGTH ); 
+      KENT[i] = KentX( x1[i]*UNIT_LENGTH )*pow(M200_z/g_inputParam[M200]/Ez,2./3.); //X-ray units scaled w. redshift
      }
 
      k = j = 0;
 #ifdef PARALLEL
      if (grid[0].rank_coord == grid[0].nproc - 1){
 #endif
-     d->Vc[PRS][k][j][NX1_TOT-1] = KENT[NX1_TOT-1]*pow((g_inputParam[ne_out]*CONST_mue*CONST_mp),g_gamma)/const1;
+     double R200_z = M200toR200(M200_z,g_zred), R200_0 = M200toR200(g_inputParam[M200],0.0);
+     double ne_out_z=pow(R200_z/R200_0,-g_inputParam[dslope])*Ez*Ez*g_inputParam[ne_out];
+     d->Vc[PRS][k][j][NX1_TOT-1] = KENT[NX1_TOT-1]*pow((ne_out_z*CONST_mue*CONST_mp),g_gamma)/const1;
 #ifdef PARALLEL
      }
 
@@ -194,7 +202,11 @@ void ICM_init(Data *d, Grid *grid)
 /* ********************************************************************* */
 double KentX (double r) //r is in cgs; returns X-ray entropy
 {
-  return g_inputParam[K0] + g_inputParam[K100]*pow(r/(CONST_pc*1.e5),g_inputParam[kalpha]);
+//change 100 kpc normalization to change with halo mass and redshift
+  double r100, M200_z = MhaloMcb(g_inputParam[M200],g_zred);
+  double R200_z = M200toR200(M200_z,g_zred), R200_0 = M200toR200(g_inputParam[M200],0.0);
+  r100 = CONST_pc*1.e5*R200_z/R200_0;
+  return g_inputParam[K0] + g_inputParam[K100]*pow(r/r100,g_inputParam[kalpha]);
 }
 /* ********************************************************************* */
 void Analysis (const Data *d, Grid *grid)
@@ -212,6 +224,9 @@ void Analysis (const Data *d, Grid *grid)
   double g_mcold, g_mhot;
   double *dx1, *dx2, *dx3, *x1, *x2, *x3, d3;
   double sendarray[17], recvarray[17], dvol, TkeV;
+  double M200_z = MhaloMcb(g_inputParam[M200],g_zred);
+  double R200_z =  M200toR200(M200_z,g_zred); 
+  double Ez = Hubatz(g_zred)/CONST_H0; 
   FILE *hist_file;
 
   x1 = grid[IDIR].x; x2 = grid[JDIR].x; x3 = grid[KDIR].x;
@@ -221,7 +236,7 @@ void Analysis (const Data *d, Grid *grid)
   #endif
   if (g_stepNumber==0) {
     hist_file = fopen ("pluto_hst.out", "w");
-    fprintf(hist_file,"#[1]time [2]g_dt [3]mass [4]TE [5]KE1 [6]KE2 [7]KE3 [8]MOM1 [9]MOM2 [10]MOM3 [11]mdot [12]mdot_x [13]mdot_c [14]madd [15]eadd [16]mdot_jet [17]msub [18]mcold [19]mhot\n ");
+    fprintf(hist_file,"#[1]time [2]g_dt [3]mass [4]TE [5]KE1 [6]KE2 [7]KE3 [8]MOM1 [9]MOM2 [10]MOM3 [11]mdot [12]mdot_x [13]mdot_c [14]madd [15]eadd [16]mdot_jet [17]msub [18]mcold [19]mhot [20]redshift [21]tcosmic [22]d_outer [23]p_outer [24]M200_z(cgs) [25]R200_z(cgs) [26]Ez\n ");
   }
   else hist_file = fopen ("pluto_hst.out", "a");
 
@@ -285,7 +300,7 @@ void Analysis (const Data *d, Grid *grid)
      madd = recvarray[11]; eadd = recvarray[12]; mdot_jet = recvarray[13];
      msub = recvarray[14]; g_mcold = recvarray[15]; g_mhot = recvarray[16];
   #endif
-    fprintf(hist_file,"%20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e\n ", g_time, g_dt, g_mass, g_TE, g_KE1, g_KE2, g_KE3, g_mom1, g_mom2, g_mom3, g_mdot, mdot_x, mdot_c, madd, eadd, mdot_jet, msub, g_mcold, g_mhot);
+    fprintf(hist_file,"%20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e %20.10e\n ", g_time, g_dt, g_mass, g_TE, g_KE1, g_KE2, g_KE3, g_mom1, g_mom2, g_mom3, g_mdot, mdot_x, mdot_c, madd, eadd, mdot_jet, msub, g_mcold, g_mhot, g_zred, g_tcosmic, g_d_outer, g_p_outer, M200_z, R200_z, Ez);
 
     fclose(hist_file);
   #ifdef PARALLEL
@@ -450,18 +465,57 @@ double BodyForcePotential(double x1, double x2, double x3)
  *
  *********************************************************************** */
 {
-  double H0 = 2.19701879455606e-18, dcrit=3.*H0*H0/(8.*CONST_PI*CONST_G);             /* 390 kpc */
-  double R200=pow(3.*g_inputParam[M200]/(4.*CONST_PI*200.*dcrit),(1./3.));
+  double M200_z = MhaloMcb(g_inputParam[M200],g_zred);
+  double R200_z = M200toR200(M200_z,g_zred);
   double Phi, x;
-  x = x1*UNIT_LENGTH/R200;
-  Phi = -CONST_G*g_inputParam[M200]*log(1.+g_inputParam[c200]*x) \
-         /((log(1.+g_inputParam[c200])-g_inputParam[c200]/(1.+g_inputParam[c200]))*R200*x);
+
+  x = x1*UNIT_LENGTH/R200_z; //only NFW potl is time-dependent, others are fixed
+  Phi = -CONST_G*M200_z*log(1.+g_inputParam[c200]*x) \
+         /((log(1.+g_inputParam[c200])-g_inputParam[c200]/(1.+g_inputParam[c200]))*R200_z*x);
   Phi += g_inputParam[Vc_sis]*g_inputParam[Vc_sis]*log(x1*UNIT_LENGTH/g_inputParam[r0_sis]);
   Phi -= CONST_G*g_inputParam[M_smbh]/(x1*UNIT_LENGTH);
   Phi /= UNIT_VELOCITY*UNIT_VELOCITY;
   return Phi;
 }
 #endif
+/* ********************************************************************* */
+double MhaloMcb(double mass0, double red) //returns halo mass in same unit as mass0 at a given z
+{
+return mass0*pow((1.+red),g_inputParam[beta_mcb])*exp(-g_inputParam[gamma_mcb]*red);
+}
+/* ********************************************************************* */
+
+/* ********************************************************************* */
+double M200toR200(double Mvir, double red) //returns R200 in cgs units with Mvir in cgs
+{
+  double Hcgs = Hubatz(red)/(CONST_pc*10.); //Hubble constant at a given redshift, Mvir also at that z
+  return pow(CONST_G*Mvir/(100.*Hcgs*Hcgs), 1./3.);
+}
+/* ********************************************************************* */
+
+/* ********************************************************************* */
+double Hubatz(double red) //returns H in km/s/Mpc at redshift z
+{
+return CONST_H0*sqrt(CONST_Om*(1.+red)*(1.+red)*(1.+red)+(1.-CONST_Om));
+}
+/* ********************************************************************* */
+
+/* ********************************************************************* */
+double Redtotcosmic(double red) //returns cosmic time in cgs units, given a redshift
+{
+  double H0cgs = CONST_H0/(CONST_pc*10.), OL=1.-CONST_Om;
+  return 2./(3.*H0cgs*sqrt(OL))*asinh(sqrt(OL/(CONST_Om*(1.+red)*(1.+red)*(1.+red))));
+}
+/* ********************************************************************* */
+
+/* ********************************************************************* */
+double Tcosmictored(double tcos) //returns redshift, given cosmic time in cgs units
+{
+  double H0cgs = CONST_H0/(CONST_pc*10.), OL=1.-CONST_Om;
+  return pow(OL/CONST_Om,1./3.)/pow(sinh(1.5*sqrt(OL)*H0cgs*tcos),2./3.)-1.;
+}
+/* ********************************************************************* */
+
 /* ************************************************************************ */
 float ran2(long *idum)
 
@@ -520,13 +574,3 @@ float ran2(long *idum)
     if ((temp=AM*iy) > RNMX) return RNMX;
     else return temp;
 }
-
-
-
-
-
-
-
-
-
-
