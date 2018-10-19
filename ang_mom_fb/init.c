@@ -113,7 +113,7 @@ void ICM_init(Data *d, Grid *grid)
          *(pow(pg,(1.0/g_gamma-1.0))*(pow(const1/KENT[i],1.0/g_gamma)));
 
         pg = pg - fn/fnp;
-        err = abs(fn/fnp)/pg;
+        err = fabs(fn/fnp)/pg;
        }
        d->Vc[PRS][k][j][i] = pg;
        }
@@ -154,7 +154,8 @@ void ICM_init(Data *d, Grid *grid)
  double delrho[NX3_TOT][NX2_TOT][NX1_TOT];
 
  memset(delrho, 0, sizeof delrho);
-/* for(n = 4; n<=20; n++){
+//BEGIN: here is where density fluctuations are generated
+ for(n = 4; n<=20; n++){
  for(n1 = -n; n1<=n; n1+=2*n){
     kx = 2.0*CONST_PI*n1/(2.*g_domEnd[IDIR]);
     for(l = 4; l<=20; l++){
@@ -177,7 +178,8 @@ void ICM_init(Data *d, Grid *grid)
           }
        }} 
     }} 
- }}*/ 
+ }}
+ //END: density fluctuation generation
  TOT_LOOP(k,j,i){
    d->Vc[RHO][k][j][i] += delrho[k][j][i];
    d->Vc[TRC][k][j][i] = 0.0;
@@ -220,7 +222,7 @@ void Analysis (const Data *d, Grid *grid)
   #endif
   if (g_stepNumber==0) {
     hist_file = fopen ("pluto_hst.out", "w");
-    fprintf(hist_file,"#time g_dt mass TE KE1 KE2 KE3 MOM1 MOM2 MOM3 mdot mdot_x mdot_c madd eadd mdot_jet msub\n ");
+    fprintf(hist_file,"#[1]time [2]g_dt [3]mass [4]TE [5]KE1 [6]KE2 [7]KE3 [8]MOM1 [9]MOM2 [10]MOM3 [11]mdot [12]mdot_x [13]mdot_c [14]madd [15]eadd [16]mdot_jet [17]msub\n ");
   }
   else hist_file = fopen ("pluto_hst.out", "a");
 
@@ -248,7 +250,8 @@ void Analysis (const Data *d, Grid *grid)
           darea = 2.0*CONST_PI*x1[IBEG]*x1[IBEG]*sin(x2[j])*dx2[j];,
           darea = x1[IBEG]*x1[IBEG]*sin(x2[j])*dx2[j]*dx3[k];)
 
-  TkeV = (d->Vc[PRS][k][j][IBEG]*CONST_mu*CONST_mp)/(d->Vc[RHO][k][j][IBEG]*CONST_kB*1.16e9);
+  TkeV = (d->Vc[PRS][k][j][IBEG]*CONST_mu*CONST_mp)/(d->Vc[RHO][k][j][IBEG]*CONST_kB*1.16e7);
+  TkeV *= UNIT_VELOCITY*UNIT_VELOCITY;  
 
   g_mdot += d->Vc[RHO][k][j][IBEG]*d->Vc[VX1][k][j][IBEG]*darea;
   if(TkeV >= 0.5 && TkeV <=8.0){
