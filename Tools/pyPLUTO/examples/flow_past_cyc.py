@@ -1,5 +1,7 @@
 import os
 import matplotlib.pyplot as plt
+import sys
+sys.path.append("/Users/prateek/Desktop/codes/Galaxy-Cluster-PLUTO"+"/Tools/pyPLUTO/pyPLUTO") #access linux environment variable
 import pyPLUTO as pp
 import numpy as np
 

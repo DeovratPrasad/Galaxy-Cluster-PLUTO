@@ -212,7 +212,7 @@ void Analysis (const Data *d, Grid *grid)
   double g_mass, g_TE, g_mdot,mdot_x, mdot_c, darea; 
   double g_KE1, g_KE2, g_KE3, g_mom1, g_mom2, g_mom3;
   double *dx1, *dx2, *dx3, *x1, *x2, *x3, d3;
-  double sendarray[14], recvarray[14], dvol, TkeV;
+  double sendarray[15], recvarray[15], dvol, TkeV;
   FILE *hist_file;
 
   x1 = grid[IDIR].x; x2 = grid[JDIR].x; x3 = grid[KDIR].x;

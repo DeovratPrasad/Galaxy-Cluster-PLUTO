@@ -54,7 +54,7 @@ void SplitSource (const Data *d, double dt, Time_Step *Dts, Grid *grid)
     CoolingSource (d, dt, Dts, grid);
    #endif
   #endif
-//  Src_jet(d, grid); 
+  Src_jet(d, grid); 
 /* ----------------------------------------------
     Parabolic terms using STS:
 

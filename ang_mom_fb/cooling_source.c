@@ -91,6 +91,10 @@ void CoolingSource (const Data *d, double dt, Time_Step *Dts, Grid *GXYZ)
     
     VAR_LOOP(nv) v0[nv] = v1[nv] = d->Vc[nv][k][j][i];
     prs = v0[PRS];
+// make sure that p>floor
+    if (prs < g_largePressure) {
+        prs = v0[PRS] = g_largePressure;
+    }
     mu0 = MeanMolecularWeight(v0);
     T0  = v0[PRS]/v0[RHO]*KELVIN*mu0;
     #if EOS == IDEAL

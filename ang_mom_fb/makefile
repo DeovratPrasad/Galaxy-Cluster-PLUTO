@@ -7,7 +7,7 @@
 pluto:                              # Default target
 
 ARCH         = Linux.gcc.defs
-PLUTO_DIR    = /Users/prateek/Desktop/codes/Galaxy-Cluster-PLUTO/
+PLUTO_DIR    = /Users/prateek/Desktop/codes/Galaxy-Cluster-PLUTO
 SRC          = $(PLUTO_DIR)/Src
 INCLUDE_DIRS = -I. -I$(SRC)
 VPATH        = ./:$(SRC)/New:$(SRC):$(SRC)/Time_Stepping:$(SRC)/States

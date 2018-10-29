@@ -1,0 +1,12 @@
+USER           = prateek
+WORKING_DIR    = /home/prateek/Galaxy-Cluster-PLUTO/RKL_cond_n_B/1d_mhd_outflow
+SYSTEM_NAME    = Linux
+NODE_NAME      = astrohpc.physics.iisc.ernet.in
+RELEASE        = 2.6.32-504.16.2.el6.x86_64
+ARCH           = x86_64
+BYTE_ORDER     = little
+VERSION        = #1 SMP Wed Apr 22 06:48:29 UTC 2015
+PLUTO_DIR      = /home/prateek/Galaxy-Cluster-PLUTO
+PLUTO_VERSION  = "4.1"
+C_COMPILER     = gcc
+MPI_C_COMPILER = mpicc

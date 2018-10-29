@@ -1,12 +1,12 @@
 #define  PHYSICS                 HD
-#define  DIMENSIONS              1
-#define  COMPONENTS              1
+#define  DIMENSIONS              2
+#define  COMPONENTS              2
 #define  GEOMETRY                SPHERICAL
 #define  BODY_FORCE              POTENTIAL
 #define  COOLING                 TABULATED
 #define  INTERPOLATION           LINEAR
 #define  TIME_STEPPING           RK2
-#define  DIMENSIONAL_SPLITTING   YES
+#define  DIMENSIONAL_SPLITTING   NO
 #define  NTRACER                 1
 #define  USER_DEF_PARAMETERS     16
 #define  USER_DEF_CONSTANTS      3
@@ -47,10 +47,10 @@
 /* -- supplementary constants (user editable) -- */ 
 
 #define  INITIAL_SMOOTHING      NO
-#define  WARNING_MESSAGES       NO
-#define  PRINT_TO_FILE          NO
+#define  WARNING_MESSAGES       YES
+#define  PRINT_TO_FILE          YES
 #define  INTERNAL_BOUNDARY      YES
-#define  SHOCK_FLATTENING       MULTID
+#define  SHOCK_FLATTENING       NO
 #define  ARTIFICIAL_VISCOSITY   NO
-#define  CHAR_LIMITING          YES
+#define  CHAR_LIMITING          NO
 #define  LIMITER                DEFAULT
